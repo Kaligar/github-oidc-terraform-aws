@@ -42,9 +42,9 @@ jobs:
       - name: Terraform Init
         id: init
         env:
-          AWS_BUCKET_NAME: github-oidc-terraform-tfstate
+          AWS_BUCKET_NAME: github-oidc-terraform-tf2
           AWS_BUCKET_KEY_NAME: github-oidc-terraform.tfstate
-        run: terraform init -backend-config="bucket=github-oidc-terraform-aws-tfstates" -backend-config="key=github-oidc-terraform.tfstate" -backend-config="region=us-east-2"
+        run: terraform init -backend-config="bucket=github-oidc-terraform-aws-tf2" -backend-config="key=github-oidc-terraform.tfstate" -backend-config="region=us-east-2"
 
       - name: Terraform Validate
         id: validate
