@@ -1,7 +1,3 @@
-locals {
-  private_key_path = "/home/kaligar/Downloads/terraform.pem" # Mejor ruta absoluta relativa al módulo
-}
-
 terraform {
   required_providers {
     aws = {
@@ -13,24 +9,24 @@ terraform {
 
 provider "aws" {
   region     = "us-east-2"
-  access_key = var.aws_access_key != "" ? var.aws_access_key : null
-  secret_key = var.aws_secret_key != "" ? var.aws_secret_key : null
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
 }
 
 variable "aws_access_key" {
-	default = ""
+  default = ""
 }
 variable "aws_secret_key" {
-	default = ""
+  default = ""
 }
 variable "cloudfare_email" {}
 variable "cloudfare_token" {}
 
 variable "domain_name" {
-	default = "230400110.lindavdesign.com"
+  default = "230400110.lindavdesign.com"
 }
 variable "email_admin" {
-	default = "23040011@utculiacan.edu.mx"
+  default = "23040011@utculiacan.edu.mx"
 }
 variable "ssh_private_key" {
   description = "SSH private key content"
@@ -38,7 +34,7 @@ variable "ssh_private_key" {
   sensitive   = true
 }
 resource "aws_instance" "example" {
-  ami                    = "ami-02da2f5b47450f5a8"  # Debian 12 en us-east-2
+  ami                    = "ami-02da2f5b47450f5a8" # Debian 12 en us-east-2
   instance_type          = "t2.micro"
   key_name               = "terraform"
   vpc_security_group_ids = ["sg-0ad10b5c714b930c3"]
@@ -57,9 +53,9 @@ resource "aws_instance" "example" {
     }
   }
 
-	provisioner "local-exec" {
-		command = "ansible-playbook -i \"${self.public_ip},\" --private-key  ~/.ssh/id_rsa --extra-vars \"odoo_domain=${var.domain_name} odoo_email=${var.email_admin} public_ip_record=${self.public_ip} cloudfare_email=${var.cloudfare_email} cloudfare_token=${var.cloudfare_token}\" ansible/aws/aws-odoo.yml"
-	}
+  provisioner "local-exec" {
+    command = "ansible-playbook -i \"${self.public_ip},\" --private-key  ~/.ssh/id_rsa --extra-vars \"odoo_domain=${var.domain_name} odoo_email=${var.email_admin} public_ip_record=${self.public_ip} cloudfare_email=${var.cloudfare_email} cloudfare_token=${var.cloudfare_token}\" ansible/aws/aws-odoo.yml"
+  }
 }
 
 output "example_ip" {
