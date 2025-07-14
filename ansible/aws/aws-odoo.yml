@@ -1,0 +1,114 @@
+---
+- name: Install and configure Odoo 18 with HTTPS
+  hosts: all
+  become: true
+  remote_user: admin  # Cambia esto si el usuario de tu AMI no es "admin"
+  vars:
+    odoo_repo_url: "https://nightly.odoo.com/18.0/nightly/deb/"
+    email_admin: 23040011@utculiacan.edu.mx
+    nginx_conf_path: /etc/nginx/sites-available/odoo
+    some_default: "default_value"
+  tasks:
+    - name: Create a record using api token
+      community.general.cloudflare_dns:
+        zone: lindavdesign.com
+        record: 230400110
+        type: A
+        value: "{{ public_ip_record }}"
+        api_token: "{{ cloudfare_token }}"
+    - name: Mostar las variables
+      debug:
+        msg: "{{ public_ip_record }} {{ odoo_domain }}"
+      register: record
+    - name: Ensure apt cache is updated
+      apt:
+        update_cache: yes
+    - name: Ensure webroot path exists
+      file:
+        path: /var/www/html
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+
+    - name: Install required packages
+      apt:
+        name:
+          - postgresql
+          - gnupg
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+        state: present
+        update_cache: yes
+
+    - name: Add Odoo GPG key
+      apt_key:
+        url: https://nightly.odoo.com/odoo.key
+        keyring: /usr/share/keyrings/odoo-archive-keyring.gpg
+        state: present
+
+    - name: Add Odoo repository
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/odoo-archive-keyring.gpg] {{ odoo_repo_url }} ./"
+        filename: odoo
+        state: present
+
+    - name: Install Odoo
+      apt:
+        name: odoo
+        state: present
+        update_cache: yes
+
+    - name: Enable and start Odoo service
+      systemd:
+        name: odoo
+        enabled: yes
+        state: started
+
+    - name: Copy Nginx configuration for Odoo (handles HTTP + HTTPS)
+      copy:
+        src: /home/kaligar/ansible/aws/odoo_nginx.conf
+        dest: "{{ nginx_conf_path }}"
+
+    - name: Enable Nginx config
+      ansible.builtin.file:
+        src: "{{ nginx_conf_path }}"
+        dest: /etc/nginx/sites-enabled/odoo
+        state: link
+
+    - name: Reload Nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
+    - name: Esperar a que DNS resuelva correctamente el dominio
+      ansible.builtin.wait_for:
+        timeout: 300  # tiempo máximo a esperar (en segundos)
+        sleep: 10     # cuánto esperar entre intentos
+        state: started
+        delay: 5
+        host: "{{ odoo_domain }}"
+        port: 80
+
+   # - name: Ejecutar Certbot para obtener certificado SSL
+   #   ansible.builtin.command: >
+   #     certbot --nginx -d "{{ odoo_domain }}"
+   #   register: certbot_result
+   #   changed_when: "'Certificate not yet due for renewal' not in certbot_result.stdout and 'Congratulations' in certbot_result.stdout"
+   #   failed_when: certbot_result.rc != 0 and
+   #            "'Certificate not yet due for renewal' not in certbot_result.stdout"
+    - name: Ejecutar Certbot para "{{ odoo_domain }}"
+      ansible.builtin.command: >
+        certbot --nginx -d "{{ odoo_domain }}" --non-interactive --agree-tos -m 23040011@utculiacan.edu.mx
+      register: certbot_result
+      changed_when: "'Certificate not yet due for renewal' not in certbot_result.stdout"
+    - name: Copy nginx odoo content
+      ansible.builtin.copy:
+        src: /home/kaligar/ansible/aws/odoo_nginx2.conf
+        dest: /etc/nginx/sites-available/odoo
+    - name: Reload Nginx again after Certbot (if necessary)
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
+
