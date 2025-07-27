@@ -30,7 +30,7 @@ variable "email_admin" {
 #  description = "SSH private key content"
 #  type        = string
 #  sensitive   = true
-#}
+# }
 
 resource "aws_instance" "example" {
   ami                    = "ami-02da2f5b47450f5a8" # Debian 12 us-east-2
