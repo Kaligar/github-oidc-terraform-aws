@@ -63,7 +63,7 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Terraform Plan
+      - name: Terraform Plans
         id: plan
         env:
           TF_LOG: DEBUG
@@ -76,6 +76,8 @@ jobs:
             cat plan.txt
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
+
+      
 
       - name: Terraform Plan Status
         if: steps.plan.conclusion == 'failure'
