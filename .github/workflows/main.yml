@@ -5,11 +5,12 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 permissions:
   id-token: write      # required for aws oidc
   contents: read       # required for actions/checkout
-  pull-requests: write # to comment on PRs
+  pull-requests: write # optional: for PR comments (si agregas luego)
 
 env:
   TF_LOG: INFO
@@ -63,7 +64,7 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Terraform Plans
+      - name: Terraform Plan
         id: plan
         env:
           TF_LOG: DEBUG
@@ -77,15 +78,9 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      
-
-      - name: Terraform Plan Status
-        if: steps.plan.conclusion == 'failure'
-        run: exit 1
-
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.plan.conclusion == 'success'
-        run: terraform apply -auto-approve "tfplan"
+        run: terraform apply -auto-approve tfplan
         env:
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
