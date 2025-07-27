@@ -11,8 +11,12 @@ provider "aws" {
   region = "us-east-2"
 }
 
-variable "cloudfare_email" {}
-variable "cloudfare_token" {}
+variable "cloudfare_email" {
+  default = "correo"
+}
+variable "cloudfare_token" {
+  default = "token"
+}
 
 variable "domain_name" {
   default = "230400110.lindavdesign.com"
@@ -22,11 +26,11 @@ variable "email_admin" {
   default = "23040011@utculiacan.edu.mx"
 }
 
-variable "ssh_private_key" {
-  description = "SSH private key content"
-  type        = string
-  sensitive   = true
-}
+#variable "ssh_private_key" {
+#  description = "SSH private key content"
+#  type        = string
+#  sensitive   = true
+#}
 
 resource "aws_instance" "example" {
   ami                    = "ami-02da2f5b47450f5a8" # Debian 12 us-east-2
