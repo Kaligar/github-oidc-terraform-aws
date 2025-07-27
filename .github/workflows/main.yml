@@ -77,46 +77,6 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Comment plan in PR
-        id: comment
-        uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
-        env:
-          PLAN: ${{ steps.plan.outputs.stdout }}
-          VALIDATE_STDOUT: ${{ steps.validate.outputs.stdout }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = `#### Terraform Format and Style 🖌 \`${{ steps.fmt.conclusion }}\`
-            #### Terraform Initialization ⚙️ \`${{ steps.init.conclusion }}\`
-            #### Terraform Validation 🤖 \`${{ steps.validate.conclusion }}\`
-            <details><summary>Validation Output</summary>
-
-            \`\`\`
-            ${process.env.VALIDATE_STDOUT || ""}
-            \`\`\`
-
-            </details>
-
-            #### Terraform Plan 📖 \`${{ steps.plan.conclusion }}\`
-
-            <details><summary>Show Plan</summary>
-
-            \`\`\`
-            ${process.env.PLAN || ""}
-            \`\`\`
-
-            </details>
-
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            });
-
       - name: Terraform Plan Status
         if: steps.plan.conclusion == 'failure'
         run: exit 1
