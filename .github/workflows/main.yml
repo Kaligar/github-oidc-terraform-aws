@@ -53,8 +53,8 @@ jobs:
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan -input=false -lock=false -no-color \
-          -var="cloudfare_email=${{ secrets.CLOUDFARE_EMAIL }}" \
-          -var="cloudfare_token=${{ secrets.CLOUDFARE_TOKEN }}" \
+          -var="cloudfare_email=${{ secrets.CLOUDFLARE_EMAIL }}" \
+          -var="cloudfare_token=${{ secrets.CLOUDFLARE_TOKEN }}" \
           -var="ssh_private_key=${{ secrets.SSH_PRIVATE_KEY }}"
         env:
           TF_LOG: DEBUG
