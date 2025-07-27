@@ -72,7 +72,7 @@ jobs:
           terraform plan -out=tfplan -input=false -lock=false -no-color | tee plan_raw.txt
           terraform show -no-color tfplan > plan.txt
           {
-            echo "stdout<<'EOF'"
+            echo "stdout<<EOF"
             cat plan.txt
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
