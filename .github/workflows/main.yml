@@ -79,7 +79,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.plan.conclusion == 'success'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.plan.outcome == 'success'
         run: terraform apply -auto-approve tfplan
         env:
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
