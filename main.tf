@@ -48,9 +48,9 @@ resource "aws_instance" "example" {
     }
   }
 
-  provisioner "local-exec" {
-    command = "ansible-playbook -i \"${self.public_ip},\" --private-key ~/.ssh/id_rsa --extra-vars \"odoo_domain=${var.domain_name} odoo_email=${var.email_admin} public_ip_record=${self.public_ip} cloudfare_email=${var.cloudfare_email} cloudfare_token=${var.cloudfare_token}\" ansible/aws/aws-odoo.yml"
-  }
+#  provisioner "local-exec" {
+#    command = "ansible-playbook -i \"${self.public_ip},\" --private-key ~/.ssh/id_rsa --extra-vars \"odoo_domain=${var.domain_name} odoo_email=${var.email_admin} public_ip_record=${self.public_ip} cloudfare_email=${var.cloudfare_email} cloudfare_token=${var.cloudfare_token}\" ansible/aws/aws-odoo.yml"
+#  }
 }
 
 output "example_ip" {
