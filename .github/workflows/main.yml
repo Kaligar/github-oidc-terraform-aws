@@ -58,7 +58,7 @@ jobs:
           OUT=$(terraform validate -no-color 2>&1 || true)
           echo "$OUT"
           {
-            echo "stdout<<'EOF'"
+            echo "stdout<<EOF"
             echo "$OUT"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
