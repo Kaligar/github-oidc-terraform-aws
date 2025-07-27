@@ -7,9 +7,9 @@ on:
   pull_request:
 
 permissions:
-  id-token: write      # necesario para OIDC
-  contents: read
-  pull-requests: write
+  id-token: write      # Necesario para autenticación OIDC con AWS
+  contents: read       # Necesario para checkout
+  pull-requests: write # Para comentar en el PR
 
 env:
   TF_LOG: INFO
@@ -19,75 +19,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actionfig="bucket=${{ secrets.AWS_BUCKET_NAME }}" \
-            -backend-config="key=${{ secrets.AWS_BUCKET_KEY_NAME }}" \
-            -backend-config="region=us-east-2"
-
-      - name: Terraform Validate
-        id: validate
-        run: terraform validate -no-color
-
-      - name: Terraform Plan
-        id: plan
-        run: terraform plan -no-color | tee plan.out
-        if: github.event_name == 'pull_request'
-        continue-on-error: true
-
-      - name: Leer plan output
-        id: plan_output
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "plan<<EOF" >> $GITHUB_OUTPUT
-          cat plan.out >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Comentar resultado del plan en PR
-        uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const planOutput = `${{ steps.plan_output.outputs.plan }}`;
-            const output = `
-            #### Terraform Plan 📖
-
-            <details><summary>Show Plan</summary>
-
-            \`\`\`
-            ${planOutput}
-            \`\`\`
-
-            </details>
-
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*
-            `;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            });
-
-
-      - name: Terraform Plan Status
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::453634598212:role/github-oidc-terraform-aws-tfstates-role
-          aws-region: us-east-2
-
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve -var "ssh_private_key=${{ secrets.SSH_PRIVATE_KEY }}"
-
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_COUNT_ID }}:role/${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Verificar identidad AWS
         run: aws sts get-caller-identity
@@ -104,6 +43,62 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: |
-          terraform init \
-            -backend-c
+        run: terraform -chdir=./terraform init \
+          -backend-config="bucket=${{ secrets.AWS_BUCKET_NAME }}" \
+          -backend-config="key=${{ secrets.AWS_BUCKET_KEY_NAME }}" \
+          -backend-config="region=${{ secrets.AWS_REGION }}"
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+
+      - name: Comentar resultado del plan en PR
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌 \`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️ \`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖 \`${{ steps.validate.outcome }}\`
+            <details><summary>Validation Output</summary>
+
+            \`\`\`
+            ${{ steps.validate.outputs.stdout }}
+            \`\`\`
+
+            </details>
+
+            #### Terraform Plan 📖 \`${{ steps.plan.outcome }}\`
+            <details><summary>Show Plan</summary>
+
+            \`\`\`
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve
