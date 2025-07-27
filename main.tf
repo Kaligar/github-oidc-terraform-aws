@@ -34,20 +34,21 @@ resource "aws_instance" "example" {
   key_name               = "terraform"
   vpc_security_group_ids = ["sg-0ad10b5c714b930c3"]
 
-  provisioner "remote-exec" {
-    inline = [
-      "echo 'Esperando SSH...'",
-      "sudo apt update -y"
-    ]
+  
+  #provisioner "remote-exec" {
+    #inline = [
+      #"echo 'Esperando SSH...'",
+     # "sudo apt update -y"
+    #]
 
-    connection {
-      type        = "ssh"
-      user        = "admin"
-      private_key = var.ssh_private_key
-      host        = self.public_ip
-    }
-  }
-
+    #connection {
+      #type        = "ssh"
+      #user        = "admin"
+     # private_key = var.ssh_private_key
+    #  host        = self.public_ip
+   # }
+  #}
+ 
 #  provisioner "local-exec" {
 #    command = "ansible-playbook -i \"${self.public_ip},\" --private-key ~/.ssh/id_rsa --extra-vars \"odoo_domain=${var.domain_name} odoo_email=${var.email_admin} public_ip_record=${self.public_ip} cloudfare_email=${var.cloudfare_email} cloudfare_token=${var.cloudfare_token}\" ansible/aws/aws-odoo.yml"
 #  }
