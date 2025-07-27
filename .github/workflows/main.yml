@@ -28,6 +28,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
+          source-account-id: ${{ secrets.AWS_COUNT_ID}}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
