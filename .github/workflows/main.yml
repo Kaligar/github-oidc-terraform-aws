@@ -54,6 +54,10 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -out=tfplan -input=false -lock=false -no-color
         env:
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          CLOUDFARE_EMAIL: ${{ secrets.CLOUDFARE_EMAIL }}
+          CLOUDFARE_TOKEN: ${{ secrets.CLOUDFARE_TOKEN }}
           TF_LOG: DEBUG
 
       - uses: actions/github-script@v6
