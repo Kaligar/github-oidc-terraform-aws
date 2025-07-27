@@ -100,7 +100,7 @@ jobs:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_COUNT_ID }}:role/${{ secrets.AWS_ROLE}}
 
 
-          aws-region: ${{ secrets.AWS_REGION
+          aws-region: ${{ secrets.AWS_REGION }}
 
 
 
