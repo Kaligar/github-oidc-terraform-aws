@@ -28,6 +28,7 @@ jobs:
       
       - name: Verificar longitud del secreto
         run: |
+          echo "${AWS_REGION:0:8}"
           echo "Longitud del AWS_REGION: ${#AWS_REGION}"
           echo "Longitud del AWS_ACCESS_KEY_ID: ${#AWS_ACCESS_KEY_ID}"
           echo "Longitud del AWS_BUCKET_KEY_NAME: ${#AWS_BUCKET_KEY_NAME}"
